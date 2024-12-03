@@ -1,0 +1,18 @@
+select date,
+    round(100*singl_order_user:: decimal / paying_users, 2) as single_order_user_share,
+    100 - round(100* singl_order_user :: decimal / paying_users, 2) as several_order_users_share
+    
+    FROM (select time:: date as date,
+        count(DISTINCT user_id) as paying_users from user_actions
+        where order_id not in (select order_id where action = 'cencel_order')
+        group by date) t1
+        
+        LEFT JOIN ( select date, 
+                        count(user_id) as singl_order_user
+                        from (sELECT time::date as date,
+                        user_id,
+                                count(DISTINCT order_id) as user_orders
+                                from user_actions where order_id not in ( select order_id  where action = 'cancel_order')
+                                group by date, user_id having count (DISTINCT order_id) =1) t2  
+                                group by date) t3 using (date) 
+                                order by date
