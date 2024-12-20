@@ -1,0 +1,17 @@
+SELECT date,
+       new_users,
+       new_couriers,
+       sum (new_users) OVER (ORDER BY date)::int as total_users,
+       sum (new_couriers) OVER (ORDER BY date)::int as total_couriers
+FROM   (SELECT date,
+               count (user_id) as new_users FROM(SELECT user_id,
+                                                 min(time)::date as date
+                                          FROM   user_actions
+                                          GROUP BY user_id) t
+        GROUP BY date) as users full join (SELECT date,
+                                          count (courier_id) as new_couriers FROM(SELECT courier_id,
+                                                                                  min(time)::date as date
+                                                                           FROM   courier_actions
+                                                                           GROUP BY courier_id) t1
+                                   GROUP BY date) as couriers using (date)
+ORDER BY date;
